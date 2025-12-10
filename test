@@ -1,0 +1,97 @@
+admin@MacBook-Air-admin-2 tems % g++ -std=c++17 test12a.cpp \
+    -I/opt/homebrew/include \
+    -L/opt/homebrew/lib \
+    -lgtest -lgtest_main -pthread \
+    -o tests
+admin@MacBook-Air-admin-2 tems % ./tests
+
+[==========] Running 2 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 2 tests from StudentBinaryTest
+[ RUN      ] StudentBinaryTest.CountMarksTest
+[       OK ] StudentBinaryTest.CountMarksTest (0 ms)
+[ RUN      ] StudentBinaryTest.PercentTest
+[       OK ] StudentBinaryTest.PercentTest (0 ms)
+[----------] 2 tests from StudentBinaryTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 2 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 2 tests.
+admin@MacBook-Air-admin-2 tems % cat tes
+t12a.cpp
+#define main dont_use_main
+#include "lab12a.cpp"
+#undef main
+#include <fstream>
+#include <gtest/gtest.h>
+
+std::tuple<int, int, int> computeMarks(const char *filename) {
+  std::ifstream fin(filename, std::ios::binary);
+  Student st;
+  int c5 = 0, c4 = 0, c3 = 0;
+  while (fin.read((char *)&st, sizeof(Student))) {
+    if (st.iform == 5)
+      c5++;
+    else if (st.iform == 4)
+      c4++;
+    else if (st.iform == 3)
+      c3++;
+  }
+  return {c5, c4, c3};
+}
+
+double computePercent(const char *filename) {
+  std::ifstream fin(filename, std::ios::binary);
+  Student st;
+  int total = 0, good = 0;
+  while (fin.read((char *)&st, sizeof(Student))) {
+    total++;
+    if (st.phys >= 4 && st.math >= 4)
+      good++;
+  }
+  if (total == 0)
+    return 0.0;
+  return (double)good / total * 100.0;
+}
+
+TEST(StudentBinaryTest, CountMarksTest) {
+  const char *testfile = "test_students.dat";
+
+  Student s[] = {{1, "A", I, RI, 5, 5, 5},
+                 {2, "B", II, VR, 4, 3, 4},
+                 {3, "C", III, CS, 3, 4, 3}};
+
+  std::ofstream fout(testfile, std::ios::binary);
+  for (auto &st : s)
+    fout.write((char *)&st, sizeof(Student));
+  fout.close();
+
+  auto [c5, c4, c3] = computeMarks(testfile);
+
+  EXPECT_EQ(c5, 1);
+  EXPECT_EQ(c4, 1);
+  EXPECT_EQ(c3, 1);
+}
+
+TEST(StudentBinaryTest, PercentTest) {
+  const char *testfile = "test_students2.dat";
+
+  Student s[] = {{1, "A", I, RI, 5, 4, 5},
+                 {2, "B", II, CS, 4, 4, 4},
+                 {3, "C", III, VR, 3, 4, 3}};
+
+  std::ofstream fout(testfile, std::ios::binary);
+  for (auto &st : s)
+    fout.write((char *)&st, sizeof(Student));
+  fout.close();
+
+  double p = computePercent(testfile);
+
+  EXPECT_NEAR(p, (2.0 / 3.0) * 100.0, 0.001);
+}
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+admin@MacBook-Air-admin-2 tems % 
