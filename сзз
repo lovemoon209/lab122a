@@ -1,0 +1,126 @@
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+using namespace std;
+
+enum Special { RI, CS, VR, KS };
+enum Kurs { I = 1, II, III, IV, V };
+
+struct Student {
+  int nom;
+  char prizv[20];
+  Kurs kurs;
+  Special special;
+  int phys;
+  int math;
+  int iform;
+};
+
+string specToStr(Special s) {
+  switch (s) {
+  case RI:
+    return "RI";
+  case CS:
+    return "CS";
+  case VR:
+    return "VR";
+  case KS:
+    return "KS";
+  }
+  return "";
+}
+
+string kursToStr(Kurs k) {
+  switch (k) {
+  case I:
+    return "I";
+  case II:
+    return "II";
+  case III:
+    return "III";
+  case IV:
+    return "IV";
+  case V:
+    return "V";
+  }
+  return "";
+}
+
+void printTable(const char *filename) {
+  ifstream fin(filename, ios::binary);
+  Student st;
+
+  cout << left << setw(5) << "№" << setw(20) << "Прізвище" << setw(10) << "Курс"
+       << setw(10) << "Спец." << setw(10) << "Фізика" << setw(12) << "Математ."
+       << setw(12) << "Програм." << endl;
+  cout << string(70, '-') << endl;
+
+  while (fin.read((char *)&st, sizeof(Student))) {
+    cout << left << setw(5) << st.nom << setw(20) << st.prizv << setw(10)
+         << kursToStr(st.kurs) << setw(10) << specToStr(st.special) << setw(10)
+         << st.phys << setw(12) << st.math << setw(12) << st.iform << endl;
+  }
+  fin.close();
+}
+
+void countMarks(const char *filename) {
+  ifstream fin(filename, ios::binary);
+  Student st;
+  int c5 = 0, c4 = 0, c3 = 0;
+
+  while (fin.read((char *)&st, sizeof(Student))) {
+    if (st.iform == 5)
+      c5++;
+    else if (st.iform == 4)
+      c4++;
+    else if (st.iform == 3)
+      c3++;
+  }
+  fin.close();
+
+  cout << "\nКількість оцінок 5 з програмування: " << c5 << endl;
+  cout << "Кількість оцінок 4 з програмування: " << c4 << endl;
+  cout << "Кількість оцінок 3 з програмування: " << c3 << endl;
+}
+
+void prosents(const char *filename) {
+  ifstream fin(filename, ios::binary);
+  Student st;
+  int total = 0, good = 0;
+
+  while (fin.read((char *)&st, sizeof(Student))) {
+    total++;
+    if (st.phys >= 4 && st.math >= 4)
+      good++;
+  }
+  fin.close();
+
+  double percent = (double)good / total * 100.0;
+  cout << "\nПроцент студентів з оцінками >=4 з фізики та математики: "
+       << percent << "%" << endl;
+}
+
+int main() {
+  const char *filename = "students.dat";
+
+  Student s[] = {
+      {1, "Lunga", I, RI, 5, 5, 5},      {2, "Kuzma", II, VR, 5, 4, 3},
+      {3, "Petrenko", III, CS, 4, 4, 4}, {4, "Sidorov", IV, KS, 3, 5, 4},
+      {5, "Ivanov", V, RI, 4, 3, 5},     {6, "Smirnov", II, CS, 5, 5, 5},
+      {7, "Kovalenko", III, VR, 3, 4, 3}};
+
+  int n = sizeof(s) / sizeof(s[0]);
+
+  ofstream fout(filename, ios::binary);
+  for (int i = 0; i < n; i++) {
+    fout.write((char *)&s[i], sizeof(Student));
+  }
+  fout.close();
+
+  printTable(filename);
+  countMarks(filename);
+  prosents(filename);
+
+  return 0;
+}
